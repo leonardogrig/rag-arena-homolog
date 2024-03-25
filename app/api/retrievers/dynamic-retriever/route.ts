@@ -17,7 +17,7 @@ import { CONDENSE_QUESTION_TEMPLATE } from "./tools/variables";
 
 export const runtime = "edge";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<Response> {
     const identifier = getClientIp(req);
 
     if (!identifier) {
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         try {
             ({ openai, modelConfig } = initializeOpenAI(body));
         } catch (error) {
-            return error instanceof CustomError ? NextResponse.json({ error: error.message }, { status: error.status }) : null;
+            return error instanceof CustomError ? NextResponse.json({ error: error.message }, { status: error.status }) : NextResponse.json({ error: "Unkown Error while initializing OpenAI" }, { status: 500 });
         }
 
         const customDocuments: DocumentInterface<Record<string, any>>[] = body.customDocuments ?? [];
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         try {
             vectorstore = await selectVectorStore(customDocuments);
         } catch (error) {
-            return error instanceof CustomError ? NextResponse.json({ error: error.message }, { status: error.status }) : null;
+            return error instanceof CustomError ? NextResponse.json({ error: error.message }, { status: error.status }) : NextResponse.json({ error: "Unkown Error while initializing vectorstore" }, { status: 500 });
         }
 
         const retriever = await dynamicRetrieverUtility(retrieverSelected, model, vectorstore, currentMessageContent, customDocuments);
